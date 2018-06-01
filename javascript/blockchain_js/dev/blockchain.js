@@ -10,8 +10,8 @@ class Blockchain{
         this.pendingTransactions = [];
 
         // Genesis block, the first block in a blockchain
-    //     createNewBlock(69, '0', '0');
-    // }
+        this.createNewBlock(69, '0', '0');
+    }
 
     /**
       nonce comes from proof of work (just a number) -> proof that the block was created 
@@ -31,12 +31,12 @@ class Blockchain{
         this.chain.push(newBlock);
 
         return newBlock;
-    }
+    };
 
     // another way to write it is -> Blockchain.prototype.getLastBlock = function(){ // code }
     getLastBlock(){
         return this.chain[this.chain.length - 1];
-    }
+    };
 
     /**
      * newTransaction Object 
@@ -54,14 +54,14 @@ class Blockchain{
 
         // index of the lastBlock of the chain 
         return this.getLastBlock()['index'] + 1;
-    }
+    };
 
     // previousBlockHash = string, currentBlockData = json object, nonce = int 
     hashBlock(previousBlockHash, currentBlockData, nonce){
         const dataAsString = previousBlockHash + String(nonce) + JSON.stringify(currentBlockData);
         const hash = sha256(dataAsString);
         return hash;
-    }
+    };
 
     // nonce is basically the proofOfWOrk
     proofOfWork(previousBlockHash, currentBlockData){
@@ -73,7 +73,7 @@ class Blockchain{
         }
         
         return nonce;
-    }
+    };
 }
 
 //export blockchain constructor function
