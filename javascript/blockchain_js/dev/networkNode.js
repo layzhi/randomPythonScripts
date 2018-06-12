@@ -84,13 +84,18 @@ app.post('/register-node', function(req, res){
     const newNodeUrl = req.body.newNodeUrl;
     const nodeNotAlreadyPresent = coinZ.networkNodes.indexOf(newNodeUrl) == -1;
     const notCurrentNode = coinZ.currentNodeUrl !== newNodeUrl;
-    if( notCurrentNode && notCurrentNode) coinZ.networkNodes.push(newNodeUrl);
+    if( nodeNotAlreadyPresent && notCurrentNode) coinZ.networkNodes.push(newNodeUrl);
     res.json({ note: 'New node registered successfully with node.' });
 });
 
 // register multiple nodes at once
 app.post('/register-nodes-bulk', function(req, res){
-
+    const allNetworkNodes = req.body.allNetworkNodes;
+    allNetworkNodes.forEach(networkNodeUrl => {
+        const nodeNotAlreadyPresent = coinZ.networkNodes.indexOf(networkNodeUrl) == -1;
+        const notCurrentNode = coinZ.currentNodeUrl !== networkNodeUrl;
+        if(nodeNotAlreadyPresent && notCurrentNode) coinZ.networkNodes.push(networkNodeUrl);
+    });
 });
 
 app.listen(port, function(){
