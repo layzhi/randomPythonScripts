@@ -96,6 +96,8 @@ app.post('/register-nodes-bulk', function(req, res){
         const notCurrentNode = coinZ.currentNodeUrl !== networkNodeUrl;
         if(nodeNotAlreadyPresent && notCurrentNode) coinZ.networkNodes.push(networkNodeUrl);
     });
+
+    res.json({ note: 'Bulk registration successful.' });
 });
 
 app.listen(port, function(){
