@@ -22,6 +22,28 @@ app.post('/transaction', function (req, res){
     res.json({ note: `Transaction will be added in block ${blockIndex}.` });
 });
 
+app.post('/transaction/broadcast', function(req, res){
+    const newTransaction = coinZ.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
+    coinZ.addTransactionToPendingTransactions(newTransaction);
+
+    const requestPromises = [];
+    coinZ.networkNodes.forEach(networkNodes => {
+        const requestOptions = {
+            uri: networkNodeUrl + '/transaction',
+            method: 'POST',
+            body: newTransaction,
+            json: true
+        };
+
+        requestPromises.push(rp(requestOptions));
+    });
+
+    Promise.all(requestPromises)
+    .then(data => {
+        res.json({ note: 'Transaction created and broadcast successfully.' });
+    });
+});
+
 // mine a block
 app.get('/mine', function (req, res){
     const lastBlock = coinZ.getLastBlock();
@@ -47,7 +69,7 @@ app.get('/mine', function (req, res){
 // register a node and broadcast it to the network
 app.post('/register-and-broadcast-node', function(req, res){
     const newNodeUrl = req.body.newNodeUrl;
-    if (coinz.networkNodes.indexOf(newNodeUrl) == -1){
+    if (coinZ.networkNodes.indexOf(newNodeUrl) == -1){
         coinZ.networkNodes.push(newNodeUrl);
     }
     
@@ -103,3 +125,4 @@ app.post('/register-nodes-bulk', function(req, res){
 app.listen(port, function(){
     console.log(` Listening on port ${port}...`);
 });
+
