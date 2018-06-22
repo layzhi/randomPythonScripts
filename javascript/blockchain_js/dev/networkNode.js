@@ -18,8 +18,9 @@ app.get('/blockchain', function (req, res){
 
 // create a new transaction
 app.post('/transaction', function (req, res){
-    const blockIndex = coinZ.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
-    res.json({ note: `Transaction will be added in block ${blockIndex}.` });
+    const newTransaction = req.body;
+    const blockIndex = coinZ.addTransactionToPendingTransactions(newTransaction);
+    res.json ({ note: `Transaction will be added in block ${blockIndex}.` });
 });
 
 app.post('/transaction/broadcast', function(req, res){
@@ -27,7 +28,7 @@ app.post('/transaction/broadcast', function(req, res){
     coinZ.addTransactionToPendingTransactions(newTransaction);
 
     const requestPromises = [];
-    coinZ.networkNodes.forEach(networkNodes => {
+    coinZ.networkNodes.forEach(networkNodeUrl => {
         const requestOptions = {
             uri: networkNodeUrl + '/transaction',
             method: 'POST',
