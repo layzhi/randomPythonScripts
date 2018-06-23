@@ -1,5 +1,6 @@
 const sha256 = require('sha256');
 const currentNodeUrl = process.argv[3];
+const uuid = require('uuid/v1');
 
 class Blockchain{
     /*
@@ -51,12 +52,16 @@ class Blockchain{
         const newTransaction = {
             amount: amount,
             sender: sender,
-            recipient: recipient
+            recipient: recipient,
+            transactionId: uuid().split('-').join('')
         };
+        
+        return newTransaction;
+    };
 
-        this.pendingTransactions.push(newTransaction);
-
-        // index of the lastBlock of the chain 
+    // Add new create transaction to pending and the index
+    addTransactionToPendingTransactions(transactionObj){
+        this.pendingTransactions.push(transactionObj);
         return this.getLastBlock()['index'] + 1;
     };
 
