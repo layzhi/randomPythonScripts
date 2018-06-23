@@ -56,15 +56,62 @@ app.get('/mine', function (req, res){
 
     const nonce = coinZ.proofOfWork(previousBlockHash, currentBlockData);
     const blockHash = coinZ.hashBlock(previousBlockHash, currentBlockData, nonce);
-
-    coinZ.createNewTransaction(12.5, "00", nodeAddress);
-
     const newBlock = coinZ.createNewBlock(nonce, previousBlockHash, blockHash);
-    res.json({
-        note: "New block mined successfully",
-        block: newBlock
+
+    const requestPromises = [];
+    coinZ.networkNodes.forEach(networkNodeUrl => {
+        const requestOptions = {
+            uri: networkNodeUrl + '/receive-new-block',
+            method: 'POST',
+            body: { newBlock: newBlock },
+            json: true
+        };
+        
+        requestPromises.push(rp(requestOptions));
     });
 
+    Promise.all(requestPromises)
+    .then(data => {
+        const requestOptions = {
+            uri: coinZ.currentNodeUrl + '/transaction/broadcast',
+            method: 'POST',
+            body: {
+                amount: 12.5,
+                sender: "00",
+                recipient: nodeAddress
+            },
+            json: true
+        };
+        return rp(requestOptions)
+    })
+    .then(data => {
+        res.json({
+            note: "New block mined & broadcast successfully",
+            block: newBlock
+        });  
+    });
+
+});
+
+app.post('/receive-new-block', function(req, res){
+    const newBlock = req.body.newBlock;
+    const lastBlock = coinZ.getLastBlock();
+    const correctHash = lastBlock.hash === newBlock.previousBlockHash;
+    const correctIndex = lastBlock['index'] + 1 === newBlock['index'];
+
+    if(correctHash && correctIndex){
+        coinZ.chain.push(newBlock);
+        coinZ.pendingTransactions = [];
+        res.json({ 
+            note: 'New block received and accepted.',
+            newBlock: newBlock
+         });
+    } else {
+        res.json({ 
+            note: 'New Block rejected.',
+            newBlock: newBlock
+        });
+    }
 });
 
 // register a node and broadcast it to the network
