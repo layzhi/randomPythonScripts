@@ -83,6 +83,39 @@ class Blockchain{
         
         return nonce;
     };
+
+    // validate whether a block chain is valid or not (iterate through the blockchain and make sure the previous hash is the same)
+    chainIsValid(blockchain){
+        let validChain = true;
+
+        // Go through entire chain and rehash and confirm block
+        for (var i = 1; i < blockchain.length; i ++){
+            const currentBlock = blockchain[i];
+            const prevBlock = blockchain[i - 1];
+            const blockHash = this.hashBlock(prevBlock['hash'], { transactions: currentBlock['transactions'], index: currentBlock['index'] }, currentBlock['nonce']);
+            if (blockHash.substring(0,4) !== '0000'){
+                validChain = false;
+            }
+            if (currentBlock['previousBlockHash'] !== prevBlock['hash']){
+                validChain = false;
+            }
+        };
+
+        // Checking genesis block
+        const genesisBlock = blockchain[0];
+        const correctNonce = genesisBlock['nonce'] === 69;
+        const correctPreviousBlockHash = genesisBlock['previousBlockHash'] === '0';
+        const correctHash = genesisBlock['hash'] === '0';
+        const correctTransactions = genesisBlock['transactions'].length === 0;
+
+        if(!correctNonce || !correctPreviousBlockHash || !correctHash || !correctTransactions){
+            validChain = false;
+        }
+
+        return validChain;
+
+    };
+
 }
 
 //export blockchain constructor function
