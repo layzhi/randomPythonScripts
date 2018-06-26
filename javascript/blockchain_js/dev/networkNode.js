@@ -171,7 +171,49 @@ app.post('/register-nodes-bulk', function(req, res){
 });
 
 app.get('/consensus', function(req, res){
+    // make a request to all the nodes in the network to access the blockchain
+    const requestPromises = [];
+    coinZ.networkNodes.forEach(networkNodeUrl => {
+        const requestOptions = {
+            uri: networkNodeUrl + '/blockchain',
+            method: 'GET',
+            json: true
+        };
 
+        requestPromises.push(rp(requestOptions));
+    });
+    // after the request, we have access to all of the blockchain in the network
+    Pomise.all(requestPromises)
+    .then(blockchains => {
+        const currentChainLength = CoinZ.chain.length;
+        let maxChainLength = currentChainLength;
+        let newLongestChain = null;
+        let newPendingTransactions = null;
+
+        // iterate through the blockchain to look for a longer chain
+        blockchains.forEach(blockchain => {
+            if(blockchain.chain.length > maxChainLength){
+                maxChainLength = blockchain.chain.length;
+                newLongestChain = blockchain.chain;
+                newPendingTransactions = blockchain.pendingTransactions;
+            };
+        });
+
+        if(!newLongestChain || (newLongestChain && !coinZ.chainIsValid(newLongestChain))){
+            res.json({ 
+                note: 'Current chain has not been replaced.',
+                chain: coinZ.chain
+            });
+        }
+        else if (newLongestChain && coinZ.chainIsValid(newLongestChain)){
+            coinZ.chain = newLongestChain;
+            coinZ.pendingTransactions = newPendingTransactions;
+            res.json({
+                note: 'This chain has been replaced.',
+                chain: coinZ.chain
+            });
+        }
+    });
 });
 
 app.listen(port, function(){
