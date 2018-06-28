@@ -185,7 +185,7 @@ app.get('/consensus', function(req, res){
     // after the request, we have access to all of the blockchain in the network
     Pomise.all(requestPromises)
     .then(blockchains => {
-        const currentChainLength = CoinZ.chain.length;
+        const currentChainLength = coinZ.chain.length;
         let maxChainLength = currentChainLength;
         let newLongestChain = null;
         let newPendingTransactions = null;
@@ -204,8 +204,7 @@ app.get('/consensus', function(req, res){
                 note: 'Current chain has not been replaced.',
                 chain: coinZ.chain
             });
-        }
-        else if (newLongestChain && coinZ.chainIsValid(newLongestChain)){
+        } else if (newLongestChain && coinZ.chainIsValid(newLongestChain)){
             coinZ.chain = newLongestChain;
             coinZ.pendingTransactions = newPendingTransactions;
             res.json({
@@ -213,6 +212,32 @@ app.get('/consensus', function(req, res){
                 chain: coinZ.chain
             });
         }
+    });
+});
+
+app.get('/block/:blockHash', function(req, res){
+    //req.params -> /:blockHash (the user will pass in a blockHash)
+    const blockHash = req.params.blockHash;
+    const correctBlock = coinZ.getBLock(blockHash);
+    res.json({ 
+        block: correctBlock
+    });
+});
+
+app.get('/transaction/:transactionId', function (req, res){
+    const transactionId = req.params.transactionId;
+    const transactionData = coinZ.getTransaction(transactionId);
+    res.json({
+        transaction: transactionData.transaction,
+        block: transactionData.block
+    });
+});
+
+app.get('/address/:address', function (req, res){
+    const address = req.params.address;
+    const addressData = coinZ.getAddressData(address);
+    res.json({
+        addressData: addressData
     });
 });
 
