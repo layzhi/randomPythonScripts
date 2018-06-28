@@ -170,6 +170,81 @@ app.post('/register-nodes-bulk', function(req, res){
     res.json({ note: 'Bulk registration successful.' });
 });
 
+app.get('/consensus', function(req, res){
+    // make a request to all the nodes in the network to access the blockchain
+    const requestPromises = [];
+    coinZ.networkNodes.forEach(networkNodeUrl => {
+        const requestOptions = {
+            uri: networkNodeUrl + '/blockchain',
+            method: 'GET',
+            json: true
+        };
+
+        requestPromises.push(rp(requestOptions));
+    });
+    // after the request, we have access to all of the blockchain in the network
+    Pomise.all(requestPromises)
+    .then(blockchains => {
+        const currentChainLength = coinZ.chain.length;
+        let maxChainLength = currentChainLength;
+        let newLongestChain = null;
+        let newPendingTransactions = null;
+
+        // iterate through the blockchain to look for a longer chain
+        blockchains.forEach(blockchain => {
+            if(blockchain.chain.length > maxChainLength){
+                maxChainLength = blockchain.chain.length;
+                newLongestChain = blockchain.chain;
+                newPendingTransactions = blockchain.pendingTransactions;
+            };
+        });
+
+        if(!newLongestChain || (newLongestChain && !coinZ.chainIsValid(newLongestChain))){
+            res.json({ 
+                note: 'Current chain has not been replaced.',
+                chain: coinZ.chain
+            });
+        } else if (newLongestChain && coinZ.chainIsValid(newLongestChain)){
+            coinZ.chain = newLongestChain;
+            coinZ.pendingTransactions = newPendingTransactions;
+            res.json({
+                note: 'This chain has been replaced.',
+                chain: coinZ.chain
+            });
+        }
+    });
+});
+
+app.get('/block/:blockHash', function(req, res){
+    //req.params -> /:blockHash (the user will pass in a blockHash)
+    const blockHash = req.params.blockHash;
+    const correctBlock = coinZ.getBLock(blockHash);
+    res.json({ 
+        block: correctBlock
+    });
+});
+
+app.get('/transaction/:transactionId', function (req, res){
+    const transactionId = req.params.transactionId;
+    const transactionData = coinZ.getTransaction(transactionId);
+    res.json({
+        transaction: transactionData.transaction,
+        block: transactionData.block
+    });
+});
+
+app.get('/address/:address', function (req, res){
+    const address = req.params.address;
+    const addressData = coinZ.getAddressData(address);
+    res.json({
+        addressData: addressData
+    });
+});
+
+app.get('/block-explorer', function(req, res){
+    res.sendFile('./block-explorer/index.html', { root: __dirname });
+});
+
 app.listen(port, function(){
     console.log(` Listening on port ${port}...`);
 });

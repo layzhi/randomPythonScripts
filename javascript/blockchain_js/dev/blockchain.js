@@ -83,6 +83,92 @@ class Blockchain{
         
         return nonce;
     };
+
+    // validate whether a block chain is valid or not (iterate through the blockchain and make sure the previous hash is the same)
+    chainIsValid(blockchain){
+        let validChain = true;
+
+        // Go through entire chain and rehash and confirm block
+        for (var i = 1; i < blockchain.length; i ++){
+            const currentBlock = blockchain[i];
+            const prevBlock = blockchain[i - 1];
+            const blockHash = this.hashBlock(prevBlock['hash'], { transactions: currentBlock['transactions'], index: currentBlock['index'] }, currentBlock['nonce']);
+            if (blockHash.substring(0,4) !== '0000'){
+                validChain = false;
+            }
+            if (currentBlock['previousBlockHash'] !== prevBlock['hash']){
+                validChain = false;
+            }
+        };
+
+        // Checking genesis block
+        const genesisBlock = blockchain[0];
+        const correctNonce = genesisBlock['nonce'] === 69;
+        const correctPreviousBlockHash = genesisBlock['previousBlockHash'] === '0';
+        const correctHash = genesisBlock['hash'] === '0';
+        const correctTransactions = genesisBlock['transactions'].length === 0;
+
+        if(!correctNonce || !correctPreviousBlockHash || !correctHash || !correctTransactions){
+            validChain = false;
+        }
+
+        return validChain;
+
+    };
+
+    getBLock(blockHash){
+        let correctBlock = null;
+        this.chain.forEach(block => {
+            if(block.hash === blockHash){
+                correctBlock = block;
+            }
+        });
+        return correctBlock;
+    };
+
+    getTransaction(transactionId){
+        let correctTransaction = null;
+        let correctBlock = null;
+        this.chain.forEach(block => {
+            block.transactions.forEach(transaction => {
+                if(transaction.transactionId === transactionId){
+                    correctTransaction = transaction;
+                    correctBlock = block;
+                };
+            });
+        });
+
+        return {
+            transaction: correctTransaction,
+            block: correctBlock
+        }
+    };
+
+    getAddressData(address){
+        const addressTransactions = [];
+        this.chain.forEach(block => {
+            block.transactions.forEach(transaction => {
+                if(transaction.sender === address || transaction.recipient === address){
+                    addressTransactions.push(transaction);
+                };
+            });
+        });
+
+        let balance = 0;
+        addressTransactions.forEach(transaction => {
+            if(transaction.recipient === address){
+                balance += transaction.amount;
+            } else if (transaction.sender === address){
+                balance -= transaction.amount;
+            }
+        });
+
+        return {
+            addressTransactions: addressTransactions,
+            addressBalance: balance
+        };
+    };
+
 }
 
 //export blockchain constructor function
