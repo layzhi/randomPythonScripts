@@ -1,3 +1,5 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -7,19 +9,33 @@ public class Main {
 	
 	public static void main(String[] args) {
 		
+//		try(
+//				FileReader in = new FileReader("testfile.txt");
+//				FileWriter out = new FileWriter("newfile.txt");
+//				){
+//			int c;
+//			while((c = in.read()) != -1) {
+//				out.write(c);
+//			}
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		
 		try(
-				FileReader in = new FileReader("testfile.txt");
-				FileWriter out = new FileWriter("newfile.txt");
+				BufferedReader in = new BufferedReader(new FileReader("hamlet.xml"));
+				BufferedWriter out = new BufferedWriter(new FileWriter("newFile.txt"));
 				){
 			int c;
 			while((c = in.read()) != -1) {
-				out.write(c);
+				out.write(c);;
 			}
+			System.out.println("The reading and writing is complete")  ;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 	}
 }
